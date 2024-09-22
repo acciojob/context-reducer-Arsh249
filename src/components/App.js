@@ -1,125 +1,103 @@
-// src/App.js
-import React, { useState, useContext, createContext } from 'react';
-import './styles/App.css';
+import React, { useState, useContext, createContext } from "react";
 
-// Create AuthContext
+// Create a Context for authentication
 const AuthContext = createContext();
 
-// AuthProvider component to provide authentication state and actions
 const AuthProvider = ({ children }) => {
-  const [auth, setAuth] = useState({
-    currentUser: '',
-    isAuthenticated: false,
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState("");
 
-  // Function to handle login
   const login = () => {
-    setAuth({
-      currentUser: 'rohan',
-      isAuthenticated: true,
-    });
+    setIsAuthenticated(true);
+    setCurrentUser("rohan");
   };
 
-  // Function to handle signout
-  const signout = () => {
-    setAuth({
-      currentUser: '',
-      isAuthenticated: false,
-    });
+  const logout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser("");
   };
 
   return (
-    <AuthContext.Provider value={{ auth, login, signout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, currentUser, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-// src/App.js (continued)
-function AuthSection() {
-  const { auth, login, signout } = useContext(AuthContext);
+const ShoppingList = () => {
+  const { isAuthenticated, currentUser, login, logout } =
+    useContext(AuthContext);
+  const [inputValue, setInputValue] = useState("");
+  const [items, setItems] = useState([]);
 
-  return (
-    <div className="auth-section">
-      <button id="login-btn" onClick={login}>
-        Login
-      </button>
-      <button id="signout" onClick={signout}>
-        Signout
-      </button>
-      <p id="current-user">
-        Current user: {auth.currentUser ? auth.currentUser : ''}, isAuthenticated:{' '}
-        {auth.isAuthenticated ? 'Yes' : 'No'}
-      </p>
-    </div>
-  );
-}
-
-// src/App.js (continued)
-function ShoppingList() {
-  const [input, setInput] = useState('');
-  const [list, setList] = useState([]);
-
-  // Handle input changes
-  const handleInputChange = (e) => {
-    setInput(e.target.value);
+  const addItem = () => {
+    if (inputValue) {
+      setItems([...items, inputValue]);
+      setInputValue(""); // Clear the input
+    }
   };
 
-  // Add item to the list
-  const handleAdd = () => {
-    const trimmedInput = input.trim();
-    if (trimmedInput === '') return;
-    setList([...list, trimmedInput]);
-    setInput('');
+  const removeItem = (itemToRemove) => {
+    setItems(items.filter((item) => item !== itemToRemove));
   };
 
-  // Remove a specific item from the list
-  const handleRemove = (itemToRemove) => {
-    setList(list.filter((item) => item !== itemToRemove));
-  };
-
-  // Clear the entire list
-  const handleClear = () => {
-    setList([]);
+  const clearList = () => {
+    setItems([]);
   };
 
   return (
-    <div className="shopping-section">
-      <input
-        id="shopping-input"
-        type="text"
-        value={input}
-        onChange={handleInputChange}
-        placeholder="Enter item"
-      />
-      <button onClick={handleAdd}>Add</button>
-      <button id="clear-list" onClick={handleClear}>
-        Clear
-      </button>
-      <ul>
-        {list.map((item, index) => (
-          <li key={index} id={`item-${item}`}>
-            {item}
-            <button id={`remove-${item}`} onClick={() => handleRemove(item)}>
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+    <div>
+      {isAuthenticated ? (
+        <>
+          <div id="current-user">
+            Current user: {currentUser}, isAuthenticated: Yes
+          </div>
+          <button id="signout" onClick={logout}>
+            Signout
+          </button>
+        </>
+      ) : (
+        <button id="login-btn" onClick={login}>
+          Login
+        </button>
+      )}
+      <br />
+      {isAuthenticated && (
+        <>
+          <input
+            id="shopping-input"
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+          />
+          <button onClick={addItem}>Add</button>
+          <button id="clear-list" onClick={clearList}>
+            Clear
+          </button>
+          <ul>
+            {items.map((item) => (
+              <li key={item} id={`item-${item}`}>
+                {item}
+                <button id={`remove-${item}`} onClick={() => removeItem(item)}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
-}
+};
 
-
-function App() {
+const App = () => {
   return (
     <AuthProvider>
-      <div className="app">
-        <AuthSection />
-        <ShoppingList />
-      </div>
+      <ShoppingList />
     </AuthProvider>
   );
-}
+};
 
 export default App;
